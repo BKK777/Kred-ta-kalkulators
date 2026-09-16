@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="lv">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Kredīta kalkulators</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 30px;
+      color: #1f2937;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .main {
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    .common {
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin-bottom: 25px;
+    }
+
+    .common-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #374151;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 11px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 20px;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f0f9ff;
+      border-radius: 8px;
+      font-weight: bold;
+      min-height: 20px;
+      line-height: 1.5;
+    }
+
+    .hint {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="main">
+
+  <h1>Kredīta kalkulators</h1>
+
+  <!-- KOPĪGIE DATI -->
+
+  <div class="common">
+
+    <h2>Kredīta dati</h2>
+
+    <div class="common-grid">
+
+      <div>
+        <label>Neatmaksātā pamatsumma (€)</label>
+        <input
+          id="pamatsumma"
+          type="number"
+          value="1000"
+          min="0"
+          step="50"
+          oninput="atjaunotVisu()"
+        >
+      </div>
+
+      <div>
+        <label>Procentu likme mēnesī (%)</label>
+        <input
+          id="procenti"
+          type="number"
+          value="3.5"
+          min="0"
+          step="0.5"
+          oninput="atjaunotVisu()"
+        >
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="container">
+
+
+    <!-- 1. PĀRMAKSA PAR DIENĀM -->
+
+    <div class="card">
+
+      <h2>Pārmaksa par dienām</h2>
+
+      <label>Dienu skaits</label>
+      <input
+        id="dienas"
+        type="number"
+        value="30"
+        min="0"
+        step="1"
+      >
+
+      <button onclick="aprekinatParmaksu()">
+        Aprēķināt
+      </button>
+
+      <div class="result" id="parmaksaRezultats">
+        Pārmaksas summa: 35.00 €
+      </div>
+
+    </div>
+
+
+    <!-- 2. CIK ĀTRI ATMaksĀSI -->
+
+    <div class="card">
+
+      <h2>Cik ātri atmaksāsi kredītu?</h2>
+
+      <label>Maksājums mēnesī (€)</label>
+      <input
+        id="maksajums"
+        type="number"
+        min="0"
+        step="0.01"
+      >
+
+      <div class="hint">
+        Sākuma maksājums automātiski tiek aprēķināts uz 60 mēnešiem.
+      </div>
+
+      <button onclick="aprekinatTerminu()">
+        Aprēķināt
+      </button>
+
+      <div class="result" id="terminaRezultats">
+        Pamaini mēneša maksājumu un spied “Aprēķināt”.
+      </div>
+
+    </div>
+
+
+    <!-- 3. CIK JĀMAKSĀ MĒNESĪ -->
+
+    <div class="card">
+
+      <h2>Cik jāmaksā mēnesī?</h2>
+
+      <label>Vēlamais atmaksas laiks (mēnešos)</label>
+      <input
+        id="velamieMenesi"
+        type="number"
+        value="60"
+        min="1"
+        step="1"
+      >
+
+      <button onclick="aprekinatMaksajumu()">
+        Aprēķināt
+      </button>
+
+      <div class="result" id="maksajumaRezultats">
+        Pamaini mēnešu skaitu un spied “Aprēķināt”.
+      </div>
+
+    </div>
+
+
+  </div>
+
+</div>
+
+
+<script>
+
+function iegutPamatsummu() {
+  return Number(document.getElementById("pamatsumma").value);
+}
+
+function iegutProcentus() {
+  return Number(document.getElementById("procenti").value) / 100;
+}
+
+
+
+function aprekinatParmaksu() {
+
+  let summa = iegutPamatsummu();
+
+  let procenti =
+    Number(document.getElementById("procenti").value);
+
+  let dienas =
+    Number(document.getElementById("dienas").value);
+
+
+  if (summa < 0 || procenti < 0 || dienas < 0) {
+
+    document.getElementById("parmaksaRezultats").textContent =
+      "Ievadi korektus datus.";
+
+    return;
+  }
+
+
+  let parmaksa =
+    summa * procenti / 100 / 30 * dienas;
+
+
+  document.getElementById("parmaksaRezultats").innerHTML =
+    "Pārmaksas summa: <b>" +
+    parmaksa.toFixed(2) +
+    " €</b>";
+}
+
+
+
+function aprekinat60MenesuMaksajumu() {
+
+  let kredits = iegutPamatsummu();
+  let procenti = iegutProcentus();
+
+  if (kredits <= 0 || procenti < 0) {
+    return 0;
+  }
+
+  let menesi = 60;
+
+  if (procenti === 0) {
+    return kredits / menesi;
+  }
+
+  return (
+    kredits *
+    procenti *
+    Math.pow(1 + procenti, menesi) /
+    (Math.pow(1 + procenti, menesi) - 1)
+  );
+}
+
+
+
+function atjaunot60MenesuMaksajumu() {
+
+  let maksajums =
+    aprekinat60MenesuMaksajumu();
+
+  document.getElementById("maksajums").value =
+    maksajums.toFixed(2);
+}
+
+
+function aprekinatTerminu() {
+
+  let atlikums = iegutPamatsummu();
+  let procenti = iegutProcentus();
+
+  let maksajums =
+    Number(document.getElementById("maksajums").value);
+
+
+  if (atlikums <= 0 || procenti < 0 || maksajums <= 0) {
+
+    document.getElementById("terminaRezultats").textContent =
+      "Ievadi korektus datus.";
+
+    return;
+  }
+
+
+  let pirmieProcenti =
+    atlikums * procenti;
+
+
+  if (maksajums <= pirmieProcenti) {
+
+    document.getElementById("terminaRezultats").textContent =
+      "Maksājums ir par zemu — tas nesedz pat mēneša procentus.";
+
+    return;
+  }
+
+
+  let sakumaSumma = atlikums;
+  let pilniMenesi = 0;
+  let samaksats = 0;
+  let pedejaisMaksajums = 0;
+
+
+  while (atlikums > 0.01 && pilniMenesi < 1200) {
+
+    // pieskaita mēneša procentus
+    atlikums += atlikums * procenti;
+
+
+    // Ja atlikums jau ir mazāks par parasto mēneša maksājumu,
+    // tas būs pēdējais nepilnais maksājums
+    if (atlikums <= maksajums) {
+
+      pedejaisMaksajums = atlikums;
+      samaksats += pedejaisMaksajums;
+      atlikums = 0;
+
+      break;
+    }
+
+
+    // Pilns mēneša maksājums
+    atlikums -= maksajums;
+    samaksats += maksajums;
+
+    pilniMenesi++;
+  }
+
+
+  let pedejaisMenesis =
+    pilniMenesi + 1;
+
+  let procentos =
+    samaksats - sakumaSumma;
+
+
+  document.getElementById("terminaRezultats").innerHTML =
+
+    "Pilns maksājums <b>" +
+    maksajums.toFixed(2) +
+    " €</b> jāveic <b>" +
+    pilniMenesi +
+    " mēnešus</b>.<br><br>" +
+
+    "Pēdējais maksājums " +
+    pedejaisMenesis +
+    ". mēnesī: <b>" +
+    pedejaisMaksajums.toFixed(2) +
+    " €</b><br><br>" +
+
+    "Kopā samaksāsi: <b>" +
+    samaksats.toFixed(2) +
+    " €</b><br>" +
+
+    "No tiem procentos: <b>" +
+    procentos.toFixed(2) +
+    " €</b>";
+}
+
+
+
+function aprekinatMaksajumu() {
+
+  let kredits = iegutPamatsummu();
+  let procenti = iegutProcentus();
+
+  let menesi =
+    Number(document.getElementById("velamieMenesi").value);
+
+
+  if (kredits <= 0 || procenti < 0 || menesi <= 0) {
+
+    document.getElementById("maksajumaRezultats").textContent =
+      "Ievadi korektus datus.";
+
+    return;
+  }
+
+
+  let maksajums;
+
+
+  if (procenti === 0) {
+
+    maksajums =
+      kredits / menesi;
+
+  } else {
+
+    maksajums =
+      kredits *
+      procenti *
+      Math.pow(1 + procenti, menesi) /
+      (Math.pow(1 + procenti, menesi) - 1);
+  }
+
+
+  let kopa =
+    maksajums * menesi;
+
+  let procentos =
+    kopa - kredits;
+
+
+  document.getElementById("maksajumaRezultats").innerHTML =
+
+    "Lai kredītu atmaksātu <b>" +
+    menesi +
+    " mēnešos</b>, jāmaksā:<br><br>" +
+
+    "<b>" +
+    maksajums.toFixed(2) +
+    " € mēnesī</b><br><br>" +
+
+    "Kopā samaksāsi: <b>" +
+    kopa.toFixed(2) +
+    " €</b><br>" +
+
+    "No tiem procentos: <b>" +
+    procentos.toFixed(2) +
+    " €</b>";
+}
+
+
+
+function atjaunotVisu() {
+
+  atjaunot60MenesuMaksajumu();
+
+  aprekinatParmaksu();
+
+  aprekinatMaksajumu();
+
+}
+
+
+
+// Sākuma aprēķini
+atjaunotVisu();
+
+</script>
+
+</body>
+</html>
